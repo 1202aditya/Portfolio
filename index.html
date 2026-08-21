@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aditya Gangadhar Shinde — Mechanical Design Engineer</title>
+<style>
+  /* ============================================================
+     DESIGN TOKENS
+     Palette: light drafting paper, dark instrument rail (sidebar)
+     - navy-deep     : sidebar / modal surfaces (stays dark for contrast)
+     - navy          : main page background (light paper)
+     - navy-soft     : card surfaces on the light page
+     - ink           : primary text on light surfaces
+     - paper         : primary text on dark surfaces (sidebar / modal)
+     - muted         : secondary text on light surfaces
+     - muted-on-dark : secondary text on dark surfaces
+     - accent        : safety-orange, used for CTAs & active states only
+
+     Typography: one technical monospace family carries the whole
+     site (headings, labels, and body copy) for a consistent,
+     spec-sheet feel — no external font loading, so it never falls
+     back to a mismatched system default like Calibri or Times.
+     ============================================================ */
+  :root{
+    --navy-deep: #0B2038;
+    --navy: #F1F4F7;
+    --navy-soft: #FFFFFF;
+    --navy-soft-2: #E7EDF2;
+    --line-blue: #3D6E93;
+    --line-blue-soft: rgba(47,89,122,0.16);
+    --rivet: #4F80A6;
+    --paper: #F4F7FA;
+    --ink: #16283A;
+    --muted: #5C7488;
+    --muted-on-dark: #8CA6BC;
+    --accent: #E85A2A;
+    --accent-soft: rgba(232,90,42,0.12);
+    --shadow-soft: 0 18px 40px -16px rgba(20,40,60,0.28);
+    --shadow-card: 0 8px 20px -10px rgba(20,40,60,0.16);
+    --mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, 'Cascadia Code', 'Roboto Mono', Menlo, Consolas, monospace;
+    --sans: var(--mono);
+  }
+
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(61,110,147,0.06), transparent 60%),
+      repeating-linear-gradient(0deg, var(--line-blue-soft) 0px, var(--line-blue-soft) 1px, transparent 1px, transparent 120px),
+      repeating-linear-gradient(90deg, var(--line-blue-soft) 0px, var(--line-blue-soft) 1px, transparent 1px, transparent 120px),
+      repeating-linear-gradient(0deg, rgba(61,110,147,0.045) 0px, rgba(61,110,147,0.045) 1px, transparent 1px, transparent 24px),
+      repeating-linear-gradient(90deg, rgba(61,110,147,0.045) 0px, rgba(61,110,147,0.045) 1px, transparent 1px, transparent 24px),
+      var(--navy);
+    color: var(--ink);
+    font-family: var(--sans);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a{ color: inherit; }
+
+  /* ============ LAYOUT ============ */
+  .app{
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ============ SIDEBAR ============ */
+  .sidebar{
+    width: 264px;
+    flex-shrink: 0;
+    background: var(--navy-deep);
+    border-right: 1px solid var(--line-blue-soft);
+    box-shadow: var(--shadow-soft);
+    position: fixed;
+    top:0; left:0; bottom:0;
+    display:flex;
+    flex-direction: column;
+    padding: 36px 0;
+    z-index: 20;
+  }
+
+  .brand{
+    padding: 0 28px 26px 28px;
+    border-bottom: 1px solid var(--line-blue-soft);
+    margin-bottom: 26px;
+    display:flex;
+    align-items:flex-start;
+    gap: 12px;
+  }
+
+  .brand-icon{
+    width: 34px; height:34px;
+    flex-shrink:0;
+    color: var(--rivet);
+  }
+
+  .brand-mark{
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    margin-bottom: 7px;
+    font-weight: 600;
+  }
+
+  .brand-name{
+    font-family: var(--mono);
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--paper);
+    letter-spacing: 0.01em;
+  }
+
+  .nav{
+    display:flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 0 16px;
+  }
+
+  .nav-item{
+    display:flex;
+    align-items:center;
+    gap: 13px;
+    padding: 13px 14px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--muted-on-dark);
+    cursor: pointer;
+    border: none;
+    border-left: 2px solid transparent;
+    background: none;
+    text-align: left;
+    width: 100%;
+    transition: color .18s ease, background-color .18s ease, border-color .18s ease;
+  }
+
+  .nav-item .tick{
+    width: 6px; height: 6px;
+    border: 1.4px solid var(--line-blue);
+    background: transparent;
+    flex-shrink: 0;
+    transition: all .18s ease;
+  }
+
+  .nav-item:hover{
+    color: var(--paper);
+    background: rgba(255,255,255,0.025);
+  }
+
+  .nav-item.active{
+    color: var(--paper);
+    border-left-color: var(--accent);
+    background: linear-gradient(90deg, var(--line-blue-soft), transparent 85%);
+  }
+  .nav-item.active .tick{
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .sidebar-footer{
+    margin-top: auto;
+    padding: 22px 28px 0 28px;
+    border-top: 1px solid var(--line-blue-soft);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--muted-on-dark);
+    letter-spacing: 0.12em;
+  }
+  .sidebar-footer .links{ margin-top: 12px; display:flex; flex-direction:column; gap:9px; }
+  .sidebar-footer a{ color: var(--line-blue); text-decoration:none; font-weight:400; letter-spacing:0.02em; font-size: 12px; transition: color .15s ease; }
+  .sidebar-footer a:hover{ color: var(--accent); }
+
+  /* ============ MAIN ============ */
+  .main{
+    margin-left: 264px;
+    flex: 1;
+    padding: 64px 72px 80px;
+    max-width: 1000px;
+    position: relative;
+  }
+
+  /* drafting-sheet registration marks in the corners of the content area */
+  .main::before, .main::after{
+    content: '';
+    position: absolute;
+    width: 22px; height: 22px;
+    border-top: 1.5px solid var(--rivet);
+    border-left: 1.5px solid var(--rivet);
+    top: 28px; left: 28px;
+    opacity: 0.55;
+  }
+  .main::after{
+    left: auto; right: 28px;
+    border-left: none;
+    border-right: 1.5px solid var(--rivet);
+  }
+
+  .page{ display:none; }
+  .page.active{ display:block; animation: fade .4s cubic-bezier(.2,.7,.3,1); }
+  @keyframes fade{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+  .eyebrow{
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.28em;
+    color: var(--accent);
+    margin-bottom: 16px;
+    font-weight: 600;
+    display:flex;
+    align-items:center;
+    gap: 10px;
+  }
+  .eyebrow::before{
+    content:'';
+    width: 26px; height: 1.5px;
+    background: var(--accent);
+  }
+
+  h1{
+    font-family: var(--mono);
+    font-size: 42px;
+    line-height: 1.18;
+    margin: 0 0 10px 0;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .ruler{
+    height: 10px;
+    margin: 22px 0 34px;
+    background-image: repeating-linear-gradient(90deg, var(--line-blue) 0, var(--line-blue) 1px, transparent 1px, transparent 28px),
+                       repeating-linear-gradient(90deg, var(--line-blue-soft) 0, var(--line-blue-soft) 1px, transparent 1px, transparent 7px);
+    background-size: 100% 10px, 100% 5px;
+    background-position: top, bottom;
+    background-repeat: repeat-x;
+    opacity: 0.7;
+    border-bottom: 1px solid var(--line-blue-soft);
+  }
+
+  h2{
+    font-family: var(--mono);
+    font-size: 13px;
+    margin: 0 0 22px 0;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    color: var(--rivet);
+  }
+
+  .role{
+    font-size: 16.5px;
+    color: var(--line-blue);
+    margin-bottom: 6px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+
+  .bio{
+    font-size: 15.5px;
+    line-height: 1.8;
+    color: var(--ink);
+    max-width: 620px;
+    margin-bottom: 8px;
+    font-weight: 300;
+  }
+
+  .section-block{
+    border-top: 1px solid var(--line-blue-soft);
+    padding-top: 32px;
+    margin-top: 40px;
+  }
+
+  .skills-grid{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 9px;
+  }
+  .skill-chip{
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 8px 14px;
+    border: 1px solid var(--line-blue-soft);
+    color: var(--ink);
+    background: var(--navy-soft);
+    letter-spacing: 0.03em;
+    box-shadow: var(--shadow-card);
+    transition: border-color .15s ease, transform .15s ease;
+  }
+  .skill-chip:hover{ border-color: var(--rivet); transform: translateY(-1px); }
+
+  .contact-row{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 4px;
+  }
+  .contact-pill{
+    font-family: var(--mono);
+    font-size: 12.5px;
+    font-weight: 500;
+    padding: 11px 18px;
+    border: 1px solid var(--line-blue);
+    text-decoration: none;
+    color: var(--ink);
+    display:flex;
+    align-items:center;
+    gap:9px;
+    background: var(--navy-soft);
+    letter-spacing: 0.02em;
+    transition: all .18s ease;
+  }
+  .contact-pill:hover{ border-color: var(--accent); color: var(--accent); transform: translateY(-1px); box-shadow: var(--shadow-card); }
+
+  /* ============ PROJECTS GRID ============ */
+  .projects-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 22px;
+  }
+
+  .project-card{
+    border: 1px solid var(--line-blue-soft);
+    background:
+      radial-gradient(circle at 12px 12px, var(--rivet) 2.2px, transparent 2.6px),
+      radial-gradient(circle at calc(100% - 12px) 12px, var(--rivet) 2.2px, transparent 2.6px),
+      radial-gradient(circle at 12px calc(100% - 12px), var(--rivet) 2.2px, transparent 2.6px),
+      radial-gradient(circle at calc(100% - 12px) calc(100% - 12px), var(--rivet) 2.2px, transparent 2.6px),
+      var(--navy-soft);
+    cursor: pointer;
+    display:flex;
+    flex-direction: column;
+    aspect-ratio: 1 / 1;
+    box-shadow: var(--shadow-card);
+    transition: transform .2s cubic-bezier(.2,.7,.3,1), border-color .2s ease, box-shadow .2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .project-card:hover{
+    transform: translateY(-4px);
+    border-color: var(--accent);
+    box-shadow: 0 16px 32px -12px rgba(255,106,61,0.25), var(--shadow-card);
+  }
+
+  .card-titleblock{
+    font-family: var(--mono);
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--line-blue-soft);
+    display:flex;
+    justify-content: space-between;
+  }
+
+  .card-body{
+    flex:1;
+    padding: 22px 20px;
+    display:flex;
+    flex-direction:column;
+    justify-content: center;
+  }
+
+  .card-name{
+    font-family: var(--mono);
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.35;
+    margin-bottom: 12px;
+    letter-spacing: -0.005em;
+    color: var(--ink);
+  }
+  .card-tagline{
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  .card-footer{
+    border-top: 1px solid var(--line-blue-soft);
+    padding: 10px 20px;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    font-weight: 600;
+    color: var(--muted);
+    display:flex;
+    justify-content: space-between;
+    letter-spacing: 0.06em;
+    transition: color .2s ease;
+  }
+  .project-card:hover .card-footer{ color: var(--accent); }
+
+  .project-card.ghost{
+    background: transparent;
+    border-style: dashed;
+    border-width: 1.5px;
+    border-color: var(--line-blue-soft);
+    align-items:center;
+    justify-content:center;
+    display:flex;
+    box-shadow: none;
+  }
+  .project-card.ghost:hover{ border-color: var(--rivet); transform:none; box-shadow:none; }
+  .ghost-inner{
+    text-align:center;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.6;
+    padding: 20px;
+    font-weight: 500;
+  }
+  .ghost-inner .plus{ font-size: 24px; color: var(--line-blue); display:block; margin-bottom: 10px; font-weight:300; }
+
+  /* ============ PROJECT DETAIL (overlay) ============ */
+  .detail-overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(6,24,43,0.85);
+    display:none;
+    align-items:flex-start;
+    justify-content:center;
+    overflow-y:auto;
+    z-index: 100;
+    padding: 48px 20px;
+  }
+  .detail-overlay.active{ display:flex; }
+
+  .detail-sheet{
+    background: var(--navy-deep);
+    border: 1px solid var(--line-blue);
+    box-shadow: var(--shadow-soft);
+    max-width: 720px;
+    width: 100%;
+    position: relative;
+  }
+  .detail-sheet::before, .detail-sheet::after{
+    content:'';
+    position:absolute;
+    width:16px; height:16px;
+    border-top: 1.5px solid var(--rivet);
+    border-left: 1.5px solid var(--rivet);
+    top: 14px; left: 14px;
+    opacity:.6;
+  }
+  .detail-sheet::after{
+    left:auto; right:14px;
+    border-left:none;
+    border-right: 1.5px solid var(--rivet);
+  }
+
+  .detail-titleblock{
+    display:flex;
+    justify-content: space-between;
+    align-items:flex-start;
+    padding: 26px 34px;
+    border-bottom: 1px solid var(--line-blue);
+  }
+
+  .detail-close{
+    background: none;
+    border: 1px solid var(--line-blue);
+    color: var(--paper);
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 11.5px;
+    letter-spacing: 0.05em;
+    padding: 9px 16px;
+    cursor: pointer;
+    transition: all .18s ease;
+  }
+  .detail-close:hover{ border-color: var(--accent); color: var(--accent); }
+
+  .detail-body{ padding: 34px; }
+
+  .detail-body h3{
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    margin: 28px 0 11px 0;
+  }
+  .detail-body h3:first-child{ margin-top: 0; }
+  .detail-body p{
+    font-size: 14.5px;
+    line-height: 1.75;
+    color: var(--paper);
+    margin: 0 0 10px 0;
+    font-weight: 400;
+  }
+  .detail-body p:last-child{ margin-bottom: 0; }
+  .detail-body ul{
+    margin: 0 0 10px 0;
+    padding-left: 20px;
+  }
+  .detail-body ul:last-child{ margin-bottom: 0; }
+  .detail-body li{
+    font-size: 14.5px;
+    line-height: 1.7;
+    color: var(--paper);
+    margin-bottom: 6px;
+  }
+  .detail-body li b, .detail-body p b{ color: var(--paper); font-weight: 600; }
+  .detail-body table{
+    border-collapse: collapse;
+    width: 100%;
+    margin: 10px 0 14px 0;
+    font-size: 13.5px;
+  }
+  .detail-body td{
+    border: 1px solid var(--line-blue-soft);
+    padding: 7px 12px;
+    color: var(--paper);
+  }
+  .detail-body td:first-child{ color: var(--muted-on-dark); font-family: var(--mono); font-size: 12.5px; }
+
+  .detail-meta-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap: 30px;
+    padding: 18px 34px;
+    border-bottom: 1px solid var(--line-blue-soft);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    color: var(--muted-on-dark);
+    background: var(--line-blue-soft);
+  }
+  .detail-meta-row b{ color: var(--paper); display:block; margin-top:4px; font-size:13px; letter-spacing:0.01em; font-weight:500; }
+
+  .detail-link{
+    display:inline-block;
+    margin-top: 28px;
+    padding: 13px 24px;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 12.5px;
+    text-decoration:none;
+    letter-spacing: 0.05em;
+    transition: all .18s ease;
+  }
+  .detail-link:hover{ background: var(--accent); color: var(--navy-deep); }
+
+  .edit-note{
+    margin-top: 24px;
+    padding: 12px 16px;
+    border-left: 2px solid var(--line-blue);
+    background: var(--line-blue-soft);
+    font-size: 12.5px;
+    color: var(--muted);
+    font-family: var(--mono);
+    line-height: 1.6;
+  }
+
+  /* ============ RESUME PAGE ============ */
+  .resume-card{
+    border: 1px solid var(--line-blue-soft);
+    background:
+      radial-gradient(circle at 14px 14px, var(--rivet) 2.2px, transparent 2.6px),
+      radial-gradient(circle at calc(100% - 14px) 14px, var(--rivet) 2.2px, transparent 2.6px),
+      radial-gradient(circle at 14px calc(100% - 14px), var(--rivet) 2.2px, transparent 2.6px),
+      radial-gradient(circle at calc(100% - 14px) calc(100% - 14px), var(--rivet) 2.2px, transparent 2.6px),
+      var(--navy-soft);
+    box-shadow: var(--shadow-card);
+    padding: 44px;
+    max-width: 560px;
+  }
+  .resume-icon{
+    width: 42px; height: 54px;
+    border: 1.5px solid var(--line-blue);
+    position: relative;
+    margin-bottom: 26px;
+  }
+  .resume-icon::before{
+    content: '';
+    position: absolute;
+    top: 11px; left: 8px; right: 8px;
+    height: 1.5px;
+    background: var(--line-blue);
+    box-shadow: 0 8px 0 var(--line-blue), 0 16px 0 var(--line-blue), 0 24px 0 rgba(62,119,166,0.4);
+  }
+  .resume-name{
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--ink);
+  }
+  .resume-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    margin-top: 22px;
+    padding: 14px 28px;
+    background: var(--accent);
+    color: var(--navy-deep);
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 12.5px;
+    letter-spacing: 0.06em;
+    text-decoration:none;
+    transition: transform .18s ease, box-shadow .18s ease;
+  }
+  .resume-btn:hover{ transform: translateY(-2px); box-shadow: 0 12px 24px -10px rgba(255,106,61,0.45); }
+  .resume-missing{
+    font-family: var(--mono);
+    font-size: 11.5px;
+    line-height: 1.7;
+    color: var(--muted);
+    margin-top: 18px;
+    letter-spacing: 0.01em;
+  }
+
+  /* ============ MOBILE ============ */
+  @media (max-width: 860px){
+    .sidebar{
+      position: static;
+      width: 100%;
+      flex-direction: row;
+      align-items:center;
+      padding: 14px 16px;
+      overflow-x:auto;
+      box-shadow: none;
+    }
+    .brand{ display:none; }
+    .nav{ flex-direction: row; padding:0; gap:6px; }
+    .nav-item{ border-left:none; border-bottom: 2px solid transparent; white-space: nowrap; }
+    .nav-item.active{ border-left-color: transparent; border-bottom-color: var(--accent); }
+    .sidebar-footer{ display:none; }
+    .app{ flex-direction:column; }
+    .main{ margin-left:0; padding: 40px 22px; }
+    .main::before, .main::after{ display:none; }
+    h1{ font-size: 28px; }
+    .ruler{ margin: 18px 0 26px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ============ SIDEBAR NAV ============ -->
+  <nav class="sidebar">
+    <div class="brand">
+      <svg class="brand-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M24 4V9M24 39V44M44 24H39M9 24H4M37.6 10.4L34 14M14 34L10.4 37.6M37.6 37.6L34 34M14 14L10.4 10.4"
+          stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+        <circle cx="24" cy="24" r="10.5" stroke="currentColor" stroke-width="2.4"/>
+        <circle cx="24" cy="24" r="4" fill="currentColor"/>
+      </svg>
+      <div>
+        <div class="brand-name">Aditya Gangadhar<br>Shinde</div>
+      </div>
+    </div>
+
+    <div class="nav">
+      <button class="nav-item active" data-page="about"><span class="tick"></span> ABOUT</button>
+      <button class="nav-item" data-page="projects"><span class="tick"></span> PROJECTS</button>
+      <button class="nav-item" data-page="resume"><span class="tick"></span> RESUME</button>
+    </div>
+
+    <div class="sidebar-footer">
+      CONTACT
+      <div class="links">
+        <a href="mailto:youremail@example.com" id="footer-email">youremail@example.com</a>
+        <a href="#" id="footer-linkedin" target="_blank">LinkedIn ↗</a>
+        <a href="#" id="footer-github" target="_blank">GitHub ↗</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ============ MAIN CONTENT ============ -->
+  <main class="main">
+
+    <!-- ABOUT PAGE -->
+    <section class="page active" id="page-about">
+      <div class="eyebrow">ABOUT</div>
+      <h1>Aditya Gangadhar Shinde</h1>
+      <div class="role">Mechanical Design Engineer · MS Student, Mechanical &amp; Aerospace Engineering, Syracuse University</div>
+      <div class="ruler"></div>
+      <p class="bio">
+        Specializing in Design &amp; Manufacturing, with a focus on turning concepts into practical, manufacturable
+        solutions. Passionate about mechanical design, CAD, simulation, and engineering problem-solving.
+      </p>
+
+      <div class="section-block">
+        <h2>SKILLS &amp; TOOLS</h2>
+        <div class="skills-grid" id="skills-grid">
+          <!-- EDIT ME: add/remove chips by editing the SKILLS array in the script below -->
+        </div>
+      </div>
+
+      <div class="section-block">
+        <h2>CONTACT</h2>
+        <div class="contact-row">
+          <a class="contact-pill" href="mailto:youremail@example.com" id="contact-email">✉ Email</a>
+          <a class="contact-pill" href="#" id="contact-linkedin" target="_blank">in LinkedIn</a>
+          <a class="contact-pill" href="#" id="contact-github" target="_blank">⌥ GitHub</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROJECTS PAGE -->
+    <section class="page" id="page-projects">
+      <div class="eyebrow">PROJECTS</div>
+      <h1>Selected Work</h1>
+      <p class="bio">Click a project to view full details.</p>
+      <div class="ruler"></div>
+
+      <div class="projects-grid" id="projects-grid">
+        <!-- populated by script from PROJECTS array -->
+      </div>
+    </section>
+
+    <!-- RESUME PAGE -->
+    <section class="page" id="page-resume">
+      <div class="eyebrow">RESUME</div>
+      <h1>Resume</h1>
+      <p class="bio">Download a copy of my current resume below.</p>
+      <div class="ruler"></div>
+
+      <div class="resume-card">
+        <div class="resume-icon"></div>
+        <div class="resume-name">Aditya_Shinde_Resume.pdf</div>
+        <a class="resume-btn" id="resume-download" href="resume.pdf" download>↓ DOWNLOAD RESUME</a>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ============ PROJECT DETAIL OVERLAY ============ -->
+<div class="detail-overlay" id="detail-overlay">
+  <div class="detail-sheet">
+    <div class="detail-titleblock">
+      <div>
+        <h1 id="detail-title" style="font-size:26px; color: var(--paper);">Project Title</h1>
+      </div>
+      <button class="detail-close" id="detail-close">CLOSE ✕</button>
+    </div>
+
+    <div class="detail-meta-row" id="detail-meta">
+      <!-- populated by script -->
+    </div>
+
+    <div class="detail-body" id="detail-body">
+      <!-- populated by script -->
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================================================================
+   EDIT YOUR CONTENT HERE
+   Everything on the site is driven by the two things below:
+   1) CONTACT_INFO  — your email / linkedin / github links
+   2) PROJECTS      — one object per project card
+
+   You do NOT need to touch any HTML or CSS above. Just edit the
+   values in this script, save the file, and refresh the page.
+================================================================= */
+
+// ---------- 1. CONTACT INFO ----------
+const CONTACT_INFO = {
+  email: "aditya.gshinde12@gmail.com",
+  linkedin: "https://www.linkedin.com/in/aditya-shinde-9005a8211/",
+  github: "https://github.com/1202aditya"
+};
+
+// ---------- 2. SKILLS ----------
+// Add or remove any skill/tool strings here.
+const SKILLS = [
+  "SolidWorks", "AutoCAD", "ANSYS", "MATLAB", "GD&T", "DFM/DFA",
+  "Fusion 360", "Finite Element Analysis", "Product Design", "Manufacturing Processes"
+];
+
+// ---------- 3. RESUME ----------
+// Point this at your resume file or a hosted link (e.g. Google Drive share link).
+const RESUME_URL = "resume.pdf";
+
+// ---------- 4. PROJECTS ----------
+// Add a new project by copying one of the objects below and editing the fields.
+// overview / problem / approach / results accept HTML — use <p>...</p> for
+// paragraphs and <ul><li>...</li></ul> for bullet points, e.g.:
+//   overview: `<p>Short summary here.</p><ul><li>Key result one</li></ul>`
+const PROJECTS = [
+  {
+    id: "gokart-suspension",
+    title: "Go-Kart Suspension System",
+    tagline: "Double-wishbone suspension design for a go-kart, RC car, or small cart.",
+    tools: "SolidWorks, ANSYS",
+    repo: "https://github.com/1202aditya/Go-Kart-Suspension-System",
+    overview: `
+      <p>This project covers the design of a double-wishbone rear suspension corner for a 180 kg go-kart (vehicle + driver), including spring and damper sizing from a target ride frequency, a kinematic camber-curve check through wheel travel, and the structural design of the lower wishbone — the highest-loaded component in the assembly.</p>
+      <p>The scope was deliberately split into breadth and depth: the full suspension assembly (upper wishbone, lower wishbone, upright, coilover) was modeled in CAD for completeness, while detailed hand-calculation and FEA validation were focused entirely on the lower wishbone, since it carries the largest share of vertical and lateral load at the corner.</p>
+      <p><b>Key results so far:</b></p>
+      <ul>
+        <li>Spring rate: ~150 lb/in (26,556 N/m), sized to a 3.0 Hz ride frequency</li>
+        <li>Damper rate: ~1,832 N·s/m, sized to a 0.65 damping ratio</li>
+        <li>Worst-case combined design load: 1,777 N (3g bump + 1.5g cornering)</li>
+        <li>Lower wishbone hand-calc safety factor: 2.90 (Aluminum 6061-T6)</li>
+        <li>FEA validation: in progress</li>
+      </ul>
+    `,
+    problem: `
+      <p>Suspension components are sized to survive dynamic, not static, loads — a wheel hitting a curb or loading up mid-corner sees forces several times the vehicle's static weight. Designing this system required answering three separate but connected questions:</p>
+      <ul>
+        <li><b>How stiff should the spring and damper be?</b> Too soft and the kart wallows and loses tire contact over bumps; too stiff and it transmits every surface irregularity into the chassis and driver.</li>
+        <li><b>How does the wheel's camber angle change through travel?</b> Suspension geometry — not just the spring — determines how much grip the tire has mid-corner, since camber shifts as the wishbones sweep through their arc.</li>
+        <li><b>Will the lower wishbone survive its worst-case load without yielding?</b> The arm has to carry a multi-g bump load and a simultaneous cornering load without permanently deforming or fracturing, while staying as light as reasonably possible.</li>
+      </ul>
+    `,
+    approach: `
+      <p><b>1. Vehicle spec.</b> 180 kg total vehicle + driver weight, 40/60 front/rear split (54 kg rear corner mass), 1050 mm wheelbase, 1150 mm track width, ±25 mm wheel travel — chosen to sit within realistic ranges for a sprint-style go-kart.</p>
+      <p><b>2. Spring &amp; damper sizing.</b> Derived from a target ride frequency of 3.0 Hz rather than picking a rate off a shelf: k_wheel = m(2πf)² ≈ 19,187 N/m → k_spring ≈ 26,556 N/m (≈150 lb/in) at an assumed 0.85 motion ratio. Damping targeted a ratio of ζ = 0.65, giving a damper rate of ≈1,832 N·s/m.</p>
+      <p><b>3. Load case definition.</b> A 3g vertical bump (curb strike) and 1.5g lateral cornering load applied simultaneously at the tire contact patch, giving a combined worst-case resultant of 1,777 N — the number driving every subsequent stress calculation.</p>
+      <p><b>4. Kinematic camber check.</b> A 3-position four-bar linkage solve (full droop, ride height, full bump) showed the geometry gaining negative camber in bump — the desired direction for maintaining contact patch under cornering load — at roughly 1°/inch of travel.</p>
+      <p><b>5. Benchmarking.</b> Real commercially available go-kart A-arm dimensions (220–370 mm arm lengths, 150–168 mm pivot spacings) were referenced to confirm the design's proportions were realistic before committing to final dimensions.</p>
+      <p><b>6. CAD modeling.</b> The full suspension assembly — lower wishbone, upper wishbone, upright/knuckle, and coilover spring/damper — was modeled to a typical double-wishbone reference layout, with deep structural validation reserved for the lower wishbone alone.</p>
+      <p><b>7. Structural sizing.</b> Final dimensions measured directly from the CAD model:</p>
+      <table>
+        <tr><td>Arm length (pivot to ball joint)</td><td>222.5 mm</td></tr>
+        <tr><td>Pivot spacing (front-to-rear bushing)</td><td>110 mm</td></tr>
+        <tr><td>Web/rib depth</td><td>30 mm</td></tr>
+        <tr><td>Wall thickness</td><td>8.8 mm</td></tr>
+        <tr><td>Material</td><td>Aluminum 6061-T6</td></tr>
+      </table>
+      <p>Bending-moment hand-calc against the 1,777 N worst-case load: M = F × L = 1,777 N × 0.2225 m = 395.3 N·m → σ = M/Z = 94.9 MPa → SF = 275 MPa / 94.9 MPa = <b>2.90</b>. This clears the 2.5× safety factor target, giving confidence to proceed to FEA validation.</p>
+    `,
+    results: `
+      <p>This section will be completed once FEA validation is finished. Current status: the hand-calculation above (SF = 2.90, Aluminum 6061-T6, bending stress 94.9 MPa) serves as the sanity-check baseline.</p>
+      <p><b>FEA is set up as follows and currently in progress:</b></p>
+      <ul>
+        <li>Pin constraints (radial + axial, free rotation) at the two inboard bushing bores</li>
+        <li>1,777 N applied at the ball joint bore, matching the combined bump + cornering load direction</li>
+        <li>Mesh refined near the lightening hole edges and fillet transitions, with a convergence check planned across at least two mesh densities</li>
+      </ul>
+      <p><b>To be added once complete:</b> converged FEA peak stress and location, comparison against the hand-calc bound, final safety factor, and any design iteration this triggers.</p>
+    `
+  }
+  // To add another project, copy the block above (including the comma before it)
+  // and paste it here as a new { ... } object with your own details.
+];
+
+// ================================================================
+// Below this line is rendering logic — no need to edit.
+// ================================================================
+
+// Wire up contact links (sidebar footer + about page pills)
+document.getElementById("footer-email").href = "mailto:" + CONTACT_INFO.email;
+document.getElementById("footer-email").textContent = CONTACT_INFO.email;
+document.getElementById("footer-linkedin").href = CONTACT_INFO.linkedin;
+document.getElementById("footer-github").href = CONTACT_INFO.github;
+document.getElementById("contact-email").href = "mailto:" + CONTACT_INFO.email;
+document.getElementById("contact-linkedin").href = CONTACT_INFO.linkedin;
+document.getElementById("contact-github").href = CONTACT_INFO.github;
+document.getElementById("resume-download").href = RESUME_URL;
+
+// Render skills
+const skillsGrid = document.getElementById("skills-grid");
+SKILLS.forEach(skill => {
+  const chip = document.createElement("div");
+  chip.className = "skill-chip";
+  chip.textContent = skill;
+  skillsGrid.appendChild(chip);
+});
+
+// Render project cards
+const projectsGrid = document.getElementById("projects-grid");
+PROJECTS.forEach((proj, i) => {
+  const card = document.createElement("div");
+  card.className = "project-card";
+  card.innerHTML = `
+    <div class="card-titleblock"><span>DWG-${String(i+1).padStart(3,'0')}</span><span>REV A</span></div>
+    <div class="card-body">
+      <div class="card-name">${proj.title}</div>
+      <div class="card-tagline">${proj.tagline}</div>
+    </div>
+    <div class="card-footer"><span>MECH ENG</span><span>VIEW →</span></div>
+  `;
+  card.addEventListener("click", () => openDetail(proj, i));
+  projectsGrid.appendChild(card);
+});
+
+// Ghost "add project" card as a visual reminder / guide
+const ghost = document.createElement("div");
+ghost.className = "project-card ghost";
+ghost.innerHTML = `<div class="ghost-inner"><span class="plus">+</span>Add another project<br>by editing the PROJECTS array</div>`;
+projectsGrid.appendChild(ghost);
+
+// Project detail overlay logic
+const overlay = document.getElementById("detail-overlay");
+function openDetail(proj, i){
+  document.getElementById("detail-title").textContent = proj.title;
+
+  document.getElementById("detail-meta").innerHTML = `
+    <div>TOOLS<b>${proj.tools}</b></div>
+  `;
+
+  document.getElementById("detail-body").innerHTML = `
+    ${proj.repo ? `<a class="detail-link" href="${proj.repo}" target="_blank" style="margin-top:0;">VIEW ON GITHUB →</a>` : ""}
+    <h3>OVERVIEW</h3>${proj.overview}
+    <h3>THE PROBLEM</h3>${proj.problem}
+    <h3>DESIGN APPROACH</h3>${proj.approach}
+    <h3>RESULTS</h3>${proj.results}
+  `;
+
+  overlay.classList.add("active");
+}
+document.getElementById("detail-close").addEventListener("click", () => overlay.classList.remove("active"));
+overlay.addEventListener("click", (e) => { if(e.target === overlay) overlay.classList.remove("active"); });
+
+// Sidebar nav switching
+document.querySelectorAll(".nav-item").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("page-" + btn.dataset.page).classList.add("active");
+  });
+});
+</script>
+
+</body>
+</html>
